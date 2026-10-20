@@ -1,0 +1,46 @@
+// mission_executor ③-2 주행 중 감시 (follow_loop 안쪽 while, 0.2초마다)  —  dot -Tpng -Gdpi=110 me_flow_3b_watch.dot -o me_flow_3b_watch.png
+// 파랑 = mission_executor 처리, 노랑 육각형 = 판단, 주황 = 외부 노드(상자 안에 주고받는 데이터), 주황 점선 = 데이터 흐름
+digraph G {
+  graph [fontname="Noto Sans CJK KR", fontsize=30, labelloc=t, label="③-2 주행 중 감시 (막힘 E1 · 배터리 E2)  follow_loop 안쪽  ·  L171–197\nnav = basic_navigator 노드 · me = mission_executor 노드\n", nodesep=0.3, ranksep=0.3, pad=0.2];
+  node  [fontname="Noto Sans CJK KR", fontsize=22, shape=box, style="rounded,filled", fillcolor="#e8f1fb", color="#3b6ea8", penwidth=1.6, margin="0.18,0.06"];
+  edge  [fontname="Noto Sans CJK KR", fontsize=20, color="#333333", penwidth=1.6, arrowsize=0.9];
+
+  in [label="Nav2 아직 안 끝남", shape=oval, fillcolor="#d7ead6", color="#4a8a47"];
+  node [shape=hexagon, style=filled, fillcolor="#fff6cc", color="#b59a2a", margin="0.08,0.04"];
+  qc [label="취소 요청 또는\n배터리 ≤ 20 %?"];
+  qm [label="5 cm 또는 0.3 rad\n움직였음?"];
+  q10 [label="멈춘 지 10초?"];
+  q5 [label="멈춘 지 5초 &\n아직 BLOCKED 아님?"];
+  qu [label="남은 점 중 길 없는 점?"];
+  node [shape=box, style="rounded,filled", fillcolor="#e8f1fb", color="#3b6ea8", margin="0.18,0.06"];
+  cx [label="→ ③ 취소 · 배터리", fillcolor="#f6d5d5", color="#b04040"];
+  fb [label="feedback 으로 진행률 계산 · 전달"];
+  rs [label="멈춘 시각 리셋\nBLOCKED 였으면 EXECUTING 으로"];
+  bl [label="state = BLOCKED\nwarning = BLOCKED"];
+  sk [label="→ ③ 막힘 (건너뛰기)", fillcolor="#f6d5d5", color="#b04040"];
+  sl [label="0.2초 대기 → 처음으로"];
+
+  in -> qc;
+  qc -> cx [label=" 예"];
+  qc -> fb [label=" 아니오"];
+  fb -> qm;
+  qm -> rs [label=" 예"];
+  qm -> q10 [label=" 아니오"];
+  q10 -> sk [label=" 예"];
+  q10 -> q5 [label=" 아니오"];
+  q5 -> bl [label=" 예"];
+  q5 -> sl [label=" 아니오"];
+  bl -> qu;
+  qu -> sk [label=" 예 (10초 안 기다림)"];
+  qu -> sl [label=" 아니오"];
+  rs -> sl;
+
+  node [shape=box, style="filled,bold", fillcolor="#fde7cf", color="#d9822b"];
+  IM [label=<<b>inspection_manager · create3_repub</b>  <font point-size="18">(관제 PC · RPi)</font><br/><font point-size="19" color="#8a4a0c"><b>me ← 받음</b> action execute_task 취소 요청<br align="left"/>    is_cancel_requested<br align="left"/></font><font point-size="19" color="#8a4a0c"><b>me ← 받음</b> topic battery_state<br align="left"/>    sensor_msgs/msg/BatteryState<br align="left"/>    percentage: float32 (0–1)<br align="left"/></font>>];
+  FB [label=<<b>bt_navigator → inspection_manager</b>  <font point-size="18">(로봇 PC → 관제 PC)</font><br/><font point-size="19" color="#8a4a0c"><b>nav ← 받음</b> feedback navigate_through_poses<br align="left"/>    nav2_msgs/action/NavigateThroughPoses<br align="left"/>    number_of_poses_remaining · current_pose<br align="left"/></font><font point-size="19" color="#8a4a0c"><b>me → 보냄</b> feedback execute_task<br align="left"/>    scv_msgs/action/ExecuteTask<br align="left"/>    waypoint_index: uint16 · progress: float32<br align="left"/></font>>];
+  ST [label=<<b>inspection_manager · ros_bridge</b>  <font point-size="18">(관제 PC)</font><br/><font point-size="19" color="#8a4a0c"><b>me → 보냄</b> topic 1 Hz status<br align="left"/>    scv_msgs/msg/RobotStatus<br align="left"/>    state = STATE_BLOCKED · warning = "BLOCKED"<br align="left"/></font>>];
+  PL [label=<<b>planner_server</b>  <font point-size="18">(로봇 PC)</font><br/><font point-size="19" color="#8a4a0c"><b>nav → 보냄</b> action compute_path_to_pose<br align="left"/>    nav2_msgs/action/ComputePathToPose<br align="left"/>    남은 점마다<br align="left"/></font><font point-size="19" color="#8a4a0c"><b>nav ← 받음</b> result <br align="left"/>    path: nav_msgs/Path<br align="left"/></font>>];
+  edge [style=dashed, color="#d9822b", penwidth=2];
+  qc -> IM [dir=back]; fb -> FB [dir=both]; bl -> ST; qu -> PL [dir=both];
+  { rank=same; qc; IM; } { rank=same; fb; FB; } { rank=same; bl; ST; } { rank=same; qu; PL; }
+}

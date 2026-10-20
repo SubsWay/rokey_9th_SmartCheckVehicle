@@ -1,0 +1,170 @@
+{
+  "weights_sha256": "e2470df3e885b6181222c88b4552f44427c152981c3aee56eb9787fd0b277274",
+  "classes": {
+    "0": "Abnormal_left",
+    "1": "Abnormal_right",
+    "2": "Normal",
+    "3": "Exit_sign_on",
+    "4": "Exit_sign_off"
+  },
+  "collection_conditions": "Distance/angle/lighting/occlusion metadata not recorded",
+  "splits": {
+    "train": {
+      "images": 237,
+      "class_images": {
+        "Abnormal_left": 60,
+        "Abnormal_right": 69,
+        "Normal": 87,
+        "Exit_sign_on": 11,
+        "Exit_sign_off": 10
+      },
+      "class_objects": {
+        "Abnormal_left": 60,
+        "Abnormal_right": 69,
+        "Normal": 87,
+        "Exit_sign_on": 11,
+        "Exit_sign_off": 10
+      },
+      "missing_labels": []
+    },
+    "val": {
+      "images": 24,
+      "class_images": {
+        "Abnormal_left": 9,
+        "Abnormal_right": 4,
+        "Normal": 8,
+        "Exit_sign_on": 1,
+        "Exit_sign_off": 2
+      },
+      "class_objects": {
+        "Abnormal_left": 9,
+        "Abnormal_right": 4,
+        "Normal": 8,
+        "Exit_sign_on": 1,
+        "Exit_sign_off": 2
+      },
+      "missing_labels": []
+    },
+    "test": {
+      "images": 16,
+      "class_images": {
+        "Abnormal_left": 3,
+        "Abnormal_right": 4,
+        "Normal": 3,
+        "Exit_sign_on": 3,
+        "Exit_sign_off": 3
+      },
+      "class_objects": {
+        "Abnormal_left": 3,
+        "Abnormal_right": 4,
+        "Normal": 3,
+        "Exit_sign_on": 3,
+        "Exit_sign_off": 3
+      },
+      "missing_labels": []
+    }
+  },
+  "identical_images_across_splits": [],
+  "validation_cache_backup": "/tmp/scv-detection-review-new-audit-20261012/validation-labels-1791769184243619555.cache",
+  "validation": {
+    "metrics": {
+      "metrics/precision(B)": 1.0,
+      "metrics/recall(B)": 1.0,
+      "metrics/mAP50(B)": 0.9949999999999999,
+      "metrics/mAP50-95(B)": 0.9558333333333331,
+      "fitness": 0.9558333333333331
+    },
+    "per_class": {
+      "Abnormal_left": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "mAP50": 0.995,
+        "mAP50_95": 0.9436666666666668
+      },
+      "Abnormal_right": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "mAP50": 0.995,
+        "mAP50_95": 0.9077500000000001
+      },
+      "Normal": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "mAP50": 0.995,
+        "mAP50_95": 0.93775
+      },
+      "Exit_sign_on": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "mAP50": 0.995,
+        "mAP50_95": 0.9949999999999999
+      },
+      "Exit_sign_off": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "mAP50": 0.995,
+        "mAP50_95": 0.9949999999999999
+      }
+    },
+    "confusion_matrix_rows_predicted_columns_actual": [
+      [
+        9.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        4.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        8.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    ],
+    "confusion_matrix_order": [
+      "Abnormal_left",
+      "Abnormal_right",
+      "Normal",
+      "Exit_sign_on",
+      "Exit_sign_off",
+      "background"
+    ],
+    "conf": 0.25,
+    "iou": 0.45
+  }
+}

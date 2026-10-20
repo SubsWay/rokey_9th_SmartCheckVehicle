@@ -1,0 +1,11 @@
+# IF-05 {ns}/inspect_facility · mission_executor → detection_alert (둘 다 로봇 PC) · service (10/14 PM 결정, action 에서 바꿈)
+# 판정 노드는 OAK-D 영상을 처음부터 계속 받고, 이 요청이 오면 그때 판정한다.
+# 자세 보정 주행은 없다 (10/14 PM 결정): 관측 자세에서 한 번 판정하고, 판정할 수 없으면 verdict = UNCONFIRMED 로 돌려준다.
+string task_id
+uint32 run_id                   # 순찰 회차. mission_executor 가 ExecuteTask.Goal.run_id 를 그대로 넣고, detection_alert 가 InspectionResult.run_id 로 씀
+string facility_id              # facilities.yaml
+uint8  kind                     # InspectionResult.KIND_*
+---
+uint8   verdict                 # InspectionResult.NORMAL … UNCONFIRMED
+string  detail
+string  image_ref               # 로봇 PC 원본 사진 경로

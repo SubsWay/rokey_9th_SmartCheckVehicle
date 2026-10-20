@@ -1,0 +1,67 @@
+// mission_executor 시스템 설계도 (노드 단위)  —  dot -Tpng -Gdpi=110 me_system.dot -o me_system.png
+// 기준: mission_executor.py b52cc7a, docs/interfaces.md v0.2.11. create3_repub · basic_navigator 이름은 10/13 robot3 에서 확인, Nav2·관제 노드는 interfaces.md · Nav2 기본 이름
+// 왼쪽 = 우리 프로세스의 노드 2개, 가운데 = 오가는 데이터 (이름 · 종류 · 타입 · 쓰는 필드), 오른쪽 = 상대 노드 (호스트)
+// 화살표는 데이터가 가는 방향 (양쪽 화살표 = 요청과 응답). 레이아웃 때문에 모든 선은 왼쪽→오른쪽으로 쓰고 dir 로 방향을 표시
+digraph G {
+  graph [fontname="Noto Sans CJK KR", fontsize=30, labelloc=t, rankdir=LR, nodesep=0.12, ranksep=0.5, pad=0.2,
+         label="mission_executor 시스템 설계도 (노드 단위 · {ns} = /robot3, /robot4 · 모든 이름은 {ns} 안)\n"];
+  node  [fontname="Noto Sans CJK KR", fontsize=24, shape=box, style="filled,bold", penwidth=1.8, margin="0.2,0.1"];
+  edge  [fontname="Noto Sans CJK KR", penwidth=1.6, arrowsize=0.9, color="#555555"];
+
+  subgraph cluster_proc {
+    label="로봇 PC · mission_executor.py 프로세스"; fontsize=24; style="rounded,filled"; fillcolor="#f2f6fc"; color="#3b6ea8";
+    ME [label="mission_executor\n(우리 노드 · me)", fillcolor="#e8f1fb", color="#3b6ea8"];
+    NAV [label="basic_navigator\n(TurtleBot4Navigator · nav)", fillcolor="#e8f1fb", color="#3b6ea8"];
+  }
+
+  // 데이터 상자
+  node [shape=box, style="rounded,filled", fillcolor="white", color="#999999", penwidth=1.2, fontsize=19, margin="0.12,0.05"];
+  // me
+  d_task [label=<<b>execute_task</b>  action · IF-11<br/>scv_msgs/action/ExecuteTask<br align="left"/>  Goal  task_id · run_id · type · waypoints[] · target_ref<br align="left"/>  Feedback  waypoint_index · progress<br align="left"/>  Result  ok · reason · rssi_median · rssi_iqr · n_samples<br align="left"/>>];
+  d_status [label=<<b>status</b>  topic 1 Hz · IF-12<br/>scv_msgs/msg/RobotStatus<br align="left"/>  state · battery_percent · accepting_tasks · task_id · run_id<br align="left"/>  task_type · progress · x · y · yaw · pose_ok · warning<br align="left"/>>];
+  d_ins [label=<<b>inspect_facility</b>  action · IF-05<br/>scv_msgs/action/InspectFacility<br align="left"/>  Goal  task_id · run_id · facility_id · kind<br align="left"/>  Feedback  attempt · adjust_yaw · adjust_forward_m<br align="left"/>  Result  verdict · detail · image_ref<br align="left"/>>];
+  d_pre [label=<<b>survey/precise</b>  action · IF-04<br/>scv_msgs/action/PreciseMeasure<br align="left"/>  Goal  duration_s = 30<br align="left"/>  Result  rssi_median · rssi_iqr · n_samples<br align="left"/>>];
+  d_cs [label=<<b>controller_server/set_parameters</b>  service<br/>rcl_interfaces/srv/SetParameters<br align="left"/>  general_goal_checker.xy · yaw_goal_tolerance<br align="left"/>  응답  results[].successful<br align="left"/>>];
+  d_amcl [label=<<b>amcl_pose</b>  topic<br/>geometry_msgs/msg/PoseWithCovarianceStamped<br align="left"/>  position · orientation · covariance[0] · [7]<br align="left"/>>];
+  d_bat [label=<<b>battery_state</b>  topic<br/>sensor_msgs/msg/BatteryState<br align="left"/>  percentage (0–1)<br align="left"/>>];
+  d_cmd [label=<<b>cmd_vel</b>  topic<br/>geometry_msgs/msg/TwistStamped<br align="left"/>  취소 · 종료 때 0 (평소 속도는 Nav2 가 냄)<br align="left"/>>];
+  // nav
+  d_init [label=<<b>initialpose</b>  topic  /  <b>amcl_pose</b>  topic<br/>geometry_msgs/msg/PoseWithCovarianceStamped<br align="left"/>  보냄  HOME 자세 · covariance 0.15 m, 10°<br align="left"/>  받음  amcl_pose 가 오면 완료<br align="left"/>>];
+  d_bt [label=<<b>navigate_through_poses</b> · <b>navigate_to_pose</b>  action<br/>nav2_msgs/action/NavigateThroughPoses · NavigateToPose<br align="left"/>  Goal  poses[] / pose<br align="left"/>  Feedback  number_of_poses_remaining · current_pose<br align="left"/>  + <b>bt_navigator/get_state</b>  service (lifecycle_msgs/srv/GetState)<br align="left"/>>];
+  d_pl [label=<<b>compute_path_to_pose</b>  action<br/>nav2_msgs/action/ComputePathToPose<br align="left"/>  Goal  start · goal · use_start  →  Result  path (nav_msgs/Path)<br align="left"/>>];
+  d_bs [label=<<b>spin</b> · <b>drive_on_heading</b>  action<br/>nav2_msgs/action/Spin · DriveOnHeading<br align="left"/>  target_yaw (settle ±0.26 rad, 자세 보정) · target.x (전진)<br align="left"/>>];
+  d_dock [label=<<b>dock_status</b>  topic<br/>irobot_create_msgs/msg/DockStatus<br align="left"/>  is_docked<br align="left"/>>];
+  d_dk [label=<<b>dock</b> · <b>undock</b>  action · IF-06<br/>irobot_create_msgs/action/Dock · Undock<br align="left"/>  Goal 없음  →  Result is_docked<br align="left"/>>];
+
+  // 상대 노드
+  node [shape=box, style="filled,bold", fillcolor="#fde7cf", color="#d9822b", fontsize=22, margin="0.15,0.08"];
+  x_task [label="inspection_manager\n(관제 PC)"];
+  x_status [label="inspection_manager · ros_bridge\n(관제 PC)"];
+  x_ins [label="detection_alert\n(로봇 PC · 비전)"];
+  x_pre [label="rssi_scanner\n(로봇 PC · RSSI)"];
+  x_cs [label="controller_server\n(로봇 PC · Nav2)"];
+  x_amcl [label="amcl\n(로봇 PC)"];
+  x_bat [label="create3_repub\n(RPi · Create 3 중계)"];
+  x_cmd [label="create3_repub\n(RPi · Create 3 중계)"];
+  x_init [label="amcl\n(로봇 PC)"];
+  x_bt [label="bt_navigator\n(로봇 PC · Nav2)"];
+  x_pl [label="planner_server\n(로봇 PC · Nav2)"];
+  x_bs [label="behavior_server\n(로봇 PC · Nav2)"];
+  x_dock [label="create3_repub\n(RPi · Create 3 중계)"];
+  x_dk [label="create3_repub\n(RPi · Create 3 중계)"];
+
+  ME -> d_task [dir=both]; d_task -> x_task [dir=both];
+  ME -> d_status; d_status -> x_status;
+  ME -> d_ins [dir=both]; d_ins -> x_ins [dir=both];
+  ME -> d_pre [dir=both]; d_pre -> x_pre [dir=both];
+  ME -> d_cs [dir=both]; d_cs -> x_cs [dir=both];
+  ME -> d_amcl [dir=back]; d_amcl -> x_amcl [dir=back];
+  ME -> d_bat [dir=back]; d_bat -> x_bat [dir=back];
+  ME -> d_cmd; d_cmd -> x_cmd;
+  NAV -> d_init [dir=both]; d_init -> x_init [dir=both];
+  NAV -> d_bt [dir=both]; d_bt -> x_bt [dir=both];
+  NAV -> d_pl [dir=both]; d_pl -> x_pl [dir=both];
+  NAV -> d_bs [dir=both]; d_bs -> x_bs [dir=both];
+  NAV -> d_dock [dir=back]; d_dock -> x_dock [dir=back];
+  NAV -> d_dk [dir=both]; d_dk -> x_dk [dir=both];
+}

@@ -1,0 +1,61 @@
+// mission_executor ② 작업 수락·실행 on_goal · execute  —  dot -Tpng -Gdpi=110 me_flow_2_execute.dot -o me_flow_2_execute.png
+// 파랑 = mission_executor 처리, 노랑 육각형 = 판단, 주황 = 외부 노드, 주황 점선 = 주고받는 데이터
+digraph G {
+  graph [fontname="Noto Sans CJK KR", fontsize=30, labelloc=t, label="② 작업 수락·실행  on_goal · execute  ·  L102–150\nnav = basic_navigator 노드 · me = mission_executor 노드\n", nodesep=0.3, ranksep=0.3, pad=0.2];
+  node  [fontname="Noto Sans CJK KR", fontsize=22, shape=box, style="rounded,filled", fillcolor="#e8f1fb", color="#3b6ea8", penwidth=1.6, margin="0.18,0.06"];
+  edge  [fontname="Noto Sans CJK KR", fontsize=20, color="#333333", penwidth=1.6, arrowsize=0.9];
+
+  in [label="IF-11 Goal 도착", shape=oval, fillcolor="#d7ead6", color="#4a8a47"];
+  node [shape=hexagon, style=filled, fillcolor="#fff6cc", color="#b59a2a", margin="0.08,0.04"];
+  q1 [label="작업 중(busy)? 또는\n배터리 ≤ 30 % & DOCK 아님?"];
+  q2 [label="DOCKED & DOCK 아님?"];
+  qf [label="FACILITY_CHECK & 도착 ok?"];
+  qr [label="REINSPECTION & 도착 ok?"];
+  lb [label="reason = LOW_BATTERY?"];
+  node [shape=box, style="rounded,filled", fillcolor="#e8f1fb", color="#3b6ea8", margin="0.18,0.06"];
+  rej [label="REJECT", fillcolor="#f6d5d5", color="#b04040"];
+  acc [label="ACCEPT · busy = True"];
+  und [label="undock → localize → settle (① 과 같음)"];
+  ex [label="state = EXECUTING · task · run_id 저장"];
+  ty [shape=plain, style="", label=<
+    <table border="1" cellborder="0" cellspacing="0" cellpadding="5" bgcolor="#e8f1fb" color="#3b6ea8" style="rounded">
+      <tr><td colspan="2"><b>type 별로 이동</b></td></tr>
+      <tr><td align="left">0 SURVEY_SEGMENT</td><td align="left">follow(waypoints) → ③</td></tr>
+      <tr><td align="left">1 FACILITY_CHECK</td><td align="left">follow(정밀) → ③</td></tr>
+      <tr><td align="left">2 REINSPECTION</td><td align="left">follow(정밀) → ③</td></tr>
+      <tr><td align="left">3 DOCK</td><td align="left">go_dock(waypoints) → ④</td></tr>
+      <tr><td align="left">그 밖</td><td align="left">UNKNOWN_TYPE (실패)</td></tr>
+    </table>>];
+  ins [label="inspect: 자세 보정 피드백대로 회전 · 전진\n(작업 취소면 보정 중에도 바로 멈춤)\nverdict ≠ UNCONFIRMED 면 ok"];
+  mea [label="measure: 30초 정밀 측정"];
+  gd [label="go_dock(HOME)  → ④"];
+  fin [label="finally: busy = False · task 비움\nDOCKED 아니면 state = IDLE"];
+  res [label="취소 요청됨 → canceled\nok → succeed,  아니면 abort", fillcolor="#d7ead6", color="#4a8a47"];
+
+  in -> q1;
+  q1 -> rej [label=" 예"];
+  q1 -> acc [label=" 아니오"];
+  acc -> q2;
+  q2 -> und [label=" 예"];
+  q2 -> ex [label=" 아니오"];
+  und -> ex -> ty -> qf;
+  qf -> ins [label=" 예"];
+  qf -> qr [label=" 아니오"];
+  ins -> lb;
+  qr -> mea [label=" 예"];
+  qr -> lb [label=" 아니오"];
+  mea -> lb;
+  lb -> gd [label=" 예"];
+  lb -> fin [label=" 아니오"];
+  gd -> fin -> res;
+
+  node [shape=box, style="filled,bold", fillcolor="#fde7cf", color="#d9822b"];
+  IMa [label=<<b>inspection_manager</b>  <font point-size="18">(관제 PC)</font><br/><font point-size="19" color="#8a4a0c"><b>me ← 받음</b> action execute_task (Goal)<br align="left"/>    scv_msgs/action/ExecuteTask<br align="left"/>    task_id: string · run_id: uint32 · type: uint8<br align="left"/></font><font point-size="19" color="#8a4a0c">    <br align="left"/>    <br align="left"/>    waypoints: PoseStamped[] · target_ref: string<br align="left"/></font>>];
+  C3 [label=<<b>create3_repub</b>  <font point-size="18">(RPi)</font><br/><font point-size="19" color="#8a4a0c"><b>me ← 받음</b> topic battery_state<br align="left"/>    sensor_msgs/msg/BatteryState<br align="left"/>    percentage: float32 (0–1)<br align="left"/></font>>];
+  DA [label=<<b>detection_alert</b>  <font point-size="18">(로봇 PC)</font><br/><font point-size="19" color="#8a4a0c"><b>me → 보냄</b> action inspect_facility<br align="left"/>    scv_msgs/action/InspectFacility<br align="left"/>    Goal task_id · run_id · facility_id: string · kind: uint8<br align="left"/></font><font point-size="19" color="#8a4a0c"><b>me ← 받음</b> feedback <br align="left"/>    attempt · adjust_yaw [rad] · adjust_forward_m [m]<br align="left"/></font><font point-size="19" color="#8a4a0c"><b>me ← 받음</b> result <br align="left"/>    verdict: uint8 · detail · image_ref: string<br align="left"/></font>>];
+  RS [label=<<b>rssi_scanner</b>  <font point-size="18">(로봇 PC)</font><br/><font point-size="19" color="#8a4a0c"><b>me → 보냄</b> action survey/precise<br align="left"/>    scv_msgs/action/PreciseMeasure<br align="left"/>    Goal duration_s: uint16 = 30<br align="left"/></font><font point-size="19" color="#8a4a0c"><b>me ← 받음</b> result <br align="left"/>    rssi_median · rssi_iqr: float32 · n_samples: uint16<br align="left"/></font>>];
+  IMc [label=<<b>inspection_manager</b>  <font point-size="18">(관제 PC)</font><br/><font point-size="19" color="#8a4a0c"><b>me ← 받음</b> action execute_task 취소 요청<br align="left"/>    cancel_goal<br align="left"/></font><font point-size="19" color="#8a4a0c"><b>me → 보냄</b> action execute_task (Result)<br align="left"/>    scv_msgs/action/ExecuteTask<br align="left"/>    ok: bool · reason: string · rssi_median · rssi_iqr · n_samples<br align="left"/></font>>];
+  edge [style=dashed, color="#d9822b", penwidth=2];
+  in -> IMa [dir=back]; q1 -> C3 [dir=back]; ins -> DA [dir=both]; mea -> RS [dir=both]; res -> IMc [dir=both];
+  { rank=same; in; IMa; } { rank=same; q1; C3; } { rank=same; ins; DA; } { rank=same; mea; RS; } { rank=same; res; IMc; }
+}

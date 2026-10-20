@@ -1,0 +1,14 @@
+{
+  "topic": "/robot4/oakd/rgb/image_raw/compressed",
+  "frames_received": 0,
+  "frames": [],
+  "sha256": {
+    "old": "0f7bcaa5f1cd098bf81c9b71b8446af037dc5d26747f5401eff772ea63795edb",
+    "new": "aff903afa7dbd8fea7ef36180141f9b0c6fd7c01513d4c1b8469d27d8956d35f"
+  },
+  "accuracy": "Not measured: live scene ground truth is not annotated",
+  "confidence_summary": {
+    "old": {},
+    "new": {}
+  }
+}

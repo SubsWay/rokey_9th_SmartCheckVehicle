@@ -1,0 +1,7 @@
+run,task,dur_s,task_start_s,task_end_s,end_warning,run_id_first,run_id_last,cmd_n,min_x,neg_x_n,moving_after_end_s,note
+bag_t5_check,"facility(run_id 8, 녹화 전 reinspection 7)",68.0,11.0,62.0,,7,8,519,0.0,0,,①: run_id 작업 사이 유지
+bag_t5_e1b,"survey run_id 10 + 마스크 [-0.2,3.2,3.4,3.6]",46.0,5.0,24.0,BLOCKED,9,10,177,0.0,0,3.5~5.7,②: 수정 전 (cancel 버그)
+bag_t5_e1c,"survey run_id 11 + 마스크 [-0.2,3.2,3.4,3.6]",36.0,5.0,25.0,BLOCKED,0,11,152,0.0,0,,②: cancel 수정 뒤 (4f151b4)
+bag_t5_dock,"쉬는 중 dock + survey run_id 14 작업 중 dock (가짜 배터리 15 %)",321.8,202.8,314.8,,0,14,1666,0.0,0,,④: 두 번 모두 Dock succeeded (25·22초). 첫 작업 시도는 TF 끊김으로 BLOCKED skipped=3
+bag_t5_e4e7,"E4: survey run_id 15, 주행 중 fake_manager Ctrl+C",265.9,500.4,542.4,,0,16,799,0.0,0,,⑤ E4: ok=True 완주 (시간 = epoch 1791860xxx 끝 3자리)
+bag_t5_e4e7_2,"E7: survey run_id 16 cancel_after 8.0",,782.4,790.4,,16,16,166,0.0,0,,⑤ E7: 취소 요청 0.2초 뒤 cancel·0.33초 뒤 마지막 움직임·CANCELED (시간 = epoch 1791860xxx 끝 3자리)

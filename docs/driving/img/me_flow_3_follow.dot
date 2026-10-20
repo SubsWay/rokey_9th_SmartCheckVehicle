@@ -1,0 +1,63 @@
+// mission_executor ③ 주행 follow · follow_loop 바깥 흐름  —  dot -Tpng -Gdpi=110 me_flow_3_follow.dot -o me_flow_3_follow.png
+// 파랑 = mission_executor 처리, 노랑 육각형 = 판단, 주황 = 외부 노드(상자 안에 주고받는 데이터), 주황 점선 = 데이터 흐름
+digraph G {
+  graph [fontname="Noto Sans CJK KR", fontsize=30, labelloc=t, label="③ 주행  follow · follow_loop · drop_unreachable  ·  L152–229\nnav = basic_navigator 노드 · me = mission_executor 노드\n", nodesep=0.3, ranksep=0.3, pad=0.2];
+  node  [fontname="Noto Sans CJK KR", fontsize=22, shape=box, style="rounded,filled", fillcolor="#e8f1fb", color="#3b6ea8", penwidth=1.6, margin="0.18,0.06"];
+  edge  [fontname="Noto Sans CJK KR", fontsize=20, color="#333333", penwidth=1.6, arrowsize=0.9];
+
+  in [label="follow(waypoints, 정밀?)", shape=oval, fillcolor="#d7ead6", color="#4a8a47"];
+  note [label="finally: 어떻게 끝나든 정밀이었으면\nset_tolerance(0.05 m, 5°) 로 원복", fillcolor="#eeeeee", color="#777777"];
+  node [shape=hexagon, style=filled, fillcolor="#fff6cc", color="#b59a2a", margin="0.08,0.04"];
+  q0 [label="waypoints 비었음?"];
+  qp [label="정밀?"];
+  qt [label="바꾸기 성공?"];
+  ql [label="남은 점(left) 있음?"];
+  qw [label="감시 결과?"];
+  qr [label="Nav2 결과?"];
+  qs [label="건너뛴 점 있음?"];
+  node [shape=box, style="rounded,filled", fillcolor="#e8f1fb", color="#3b6ea8", margin="0.18,0.06"];
+  nw [label="실패 NO_WAYPOINTS", fillcolor="#f6d5d5", color="#b04040"];
+  st [label="set_tolerance(0.03 m, 3°)"];
+  tf [label="실패 TOLERANCE_FAILED", fillcolor="#f6d5d5", color="#b04040"];
+  du [label="출발 전 길 확인 drop_unreachable\n길 없는 점은 빼고 skipped 에 셈"];
+  go [label="navigate_through_poses(left)"];
+  w [label="0.2초마다 감시  → ③-2", fillcolor="#dfe9f7", style="rounded,filled,bold"];
+  cx [label="cancelTask · 정지\nCANCELED / LOW_BATTERY", fillcolor="#f6d5d5", color="#b04040"];
+  sk [label="건너뛰기: cancelTask\n길 없는 점 (없으면 향하던 점) 빼기"];
+  ok [label="성공", fillcolor="#d7ead6", color="#4a8a47"];
+  fs [label="실패 BLOCKED skipped=n", fillcolor="#f6d5d5", color="#b04040"];
+  fo [label="실패 (결과 문자열)", fillcolor="#f6d5d5", color="#b04040"];
+
+  { rank=same; in; note; }
+  in -> note [style=invis];
+  in -> q0;
+  q0 -> nw [label=" 예"];
+  q0 -> qp [label=" 아니오"];
+  qp -> st [label=" 예"];
+  qp -> du [label=" 아니오"];
+  st -> qt;
+  qt -> tf [label=" 아니오"];
+  qt -> du [label=" 예"];
+  du -> ql;
+  ql -> fs [label=" 아니오"];
+  ql -> go [label=" 예"];
+  go -> w -> qw;
+  qw -> cx [label=" 취소 · 배터리"];
+  qw -> sk [label=" 막힘"];
+  qw -> qr [label=" Nav2 끝남"];
+  qr -> qs [label=" SUCCEEDED"];
+  qr -> sk [label=" FAILED"];
+  qr -> fo [label=" 그 밖"];
+  qs -> ok [label=" 아니오"];
+  qs -> fs [label=" 예"];
+  sk -> ql [constraint=false, label=" 다시"];
+
+  node [shape=box, style="filled,bold", fillcolor="#fde7cf", color="#d9822b"];
+  CS [label=<<b>controller_server</b>  <font point-size="18">(로봇 PC)</font><br/><font point-size="19" color="#8a4a0c"><b>me → 보냄</b> service controller_server/set_parameters<br align="left"/>    rcl_interfaces/srv/SetParameters<br align="left"/>    general_goal_checker.xy · yaw_goal_tolerance: double<br align="left"/></font><font point-size="19" color="#8a4a0c"><b>me ← 받음</b> response <br align="left"/>    results[].successful: bool<br align="left"/></font>>];
+  PL [label=<<b>planner_server</b>  <font point-size="18">(로봇 PC)</font><br/><font point-size="19" color="#8a4a0c"><b>nav → 보냄</b> action compute_path_to_pose<br align="left"/>    nav2_msgs/action/ComputePathToPose<br align="left"/>    Goal start · goal: PoseStamped, use_start<br align="left"/></font><font point-size="19" color="#8a4a0c"><b>nav ← 받음</b> result <br align="left"/>    path: nav_msgs/Path (poses 비면 길 없음)<br align="left"/></font>>];
+  BT [label=<<b>bt_navigator</b>  <font point-size="18">(로봇 PC)</font><br/><font point-size="19" color="#8a4a0c"><b>nav → 보냄</b> action navigate_through_poses<br align="left"/>    nav2_msgs/action/NavigateThroughPoses<br align="left"/>    Goal poses: PoseStamped[] (left)<br align="left"/></font><font point-size="19" color="#8a4a0c"><b>nav ← 받음</b> result <br align="left"/>    status → SUCCEEDED · FAILED(ABORTED) · CANCELED<br align="left"/></font>>];
+  C3 [label=<<b>create3_repub</b>  <font point-size="18">(RPi)</font><br/><font point-size="19" color="#8a4a0c"><b>me → 보냄</b> topic cmd_vel<br align="left"/>    geometry_msgs/msg/TwistStamped<br align="left"/>    twist 전부 0 (정지)<br align="left"/></font>>];
+  edge [style=dashed, color="#d9822b", penwidth=2];
+  st -> CS [dir=both]; du -> PL [dir=both]; go -> BT [dir=both]; cx -> C3;
+  { rank=same; st; CS; } { rank=same; du; PL; } { rank=same; go; BT; } { rank=same; cx; C3; }
+}

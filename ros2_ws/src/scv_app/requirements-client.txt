@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+websockets
+numpy
+pillow
+pyyaml
+# rclpy · sensor_msgs · nav_msgs · geometry_msgs · std_msgs · irobot_create_msgs는 ROS 2 Jazzy(apt)에서 — pip로 설치하지 않음
+# 가상 세계 순찰 영상(robot3_virtual.py --world)은 OpenCV로 읽음 — sudo apt install python3-opencv (없으면 합성 화면)

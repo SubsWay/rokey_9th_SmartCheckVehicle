@@ -1,0 +1,14 @@
+{
+  "namespace": "/robot3",
+  "raw": {
+    "frames": 323,
+    "width": 1280,
+    "height": 720
+  },
+  "detection": {
+    "frames": 113,
+    "width": 1280,
+    "height": 720
+  },
+  "accuracy": "Not measured: no ground-truth labels"
+}

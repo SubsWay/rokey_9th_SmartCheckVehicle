@@ -1,0 +1,27 @@
+# IF-11 {ns}/execute_task · inspection_manager(관제 PC) → mission_executor(로봇 PC)
+uint8 SURVEY_SEGMENT=0
+uint8 FACILITY_CHECK=1
+uint8 REINSPECTION=2
+uint8 DOCK=3
+
+string task_id
+uint32 run_id                   # 순찰 회차. survey_buffer 가 NetSample.run_id 로 쓴다
+uint8  type
+uint8  priority
+geometry_msgs/PoseStamped[] waypoints
+string target_ref               # 칸·설비·후보 id
+---
+bool   ok
+string reason                   # 실패·건너뜀 사유 (예: BLOCKED)
+float32 rssi_median             # REINSPECTION 만: PreciseMeasure 결과 그대로 [dBm]. 다른 종류는 0 (10/12)
+float32 rssi_iqr                # REINSPECTION 만 [dB]
+uint16  n_samples               # REINSPECTION 만: 검출된 표본 수. 검출 수. 미검출/수집 실패는 아래 필드로 구분
+uint16 n_total
+uint16 n_missed
+float32 rssi_mean
+float32 duration_s
+bool measurement_valid
+string measurement_reason
+---
+uint16  waypoint_index
+float32 progress                # 0.0–1.0

@@ -1,0 +1,61 @@
+/* client page — server page의 app.css 위에 덧붙임 */
+.top.client { background: #1f2d27; }
+.top.client .tab.on { border-bottom-color: #3fa37f; }
+h2 .rid { font-family: var(--mono); font-size: 13px; color: var(--muted); font-weight: 400; margin-left: 6px; }
+
+/* 상태 표시줄 */
+.statusbar {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 10px; margin-bottom: 16px;
+}
+.statusbar .st {
+  display: flex; align-items: center; gap: 10px; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; padding: 10px 14px; min-width: 0;
+}
+.stx { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+.chip { flex: none; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.chip.ok { background: #e3f3ec; color: #1f6b4f; }
+.chip.wait { background: #fdf3df; color: #8a5a00; }
+.chip.bad { background: var(--warn-soft); color: var(--warn); }
+.chip.off { background: #eef1f3; color: #6b7780; }
+
+/* 정보 카드 */
+.icards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.icard { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+.icard.stale { border-color: #e2c6a0; }
+.icard .ih { display: flex; align-items: center; gap: 8px; }
+.icard .ih b { font-size: 15px; }
+.icard .age { margin-left: auto; font-size: 12px; color: var(--muted); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #b9c3ca; }
+.dot.live { background: #2f9e6e; }
+.dot.stale { background: #d08a2b; }
+.icard .tp { display: block; font-family: var(--mono); font-size: 11px; color: var(--muted); margin: 2px 0 10px; overflow-wrap: anywhere; }
+.icard .big { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+.icard .big small { font-size: 14px; font-weight: 400; color: var(--muted); }
+.icard .big.mono { font-family: var(--mono); font-size: 20px; }
+.icard .bar { height: 6px; background: #eef1f3; border-radius: 3px; overflow: hidden; margin-bottom: 10px; }
+.icard .bar i { display: block; height: 100%; background: #2f9e6e; }
+.ir { display: flex; justify-content: space-between; padding: 4px 0; border-top: 1px solid #eef1f3; font-size: 13px; }
+.ir span:first-child { color: var(--muted); }
+.hint { margin: 8px 0 0; font-size: 12px; color: #8a969e; }
+
+/* 카메라 */
+.cambox { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.cambox .head { display: flex; flex-wrap: wrap; gap: 16px; align-items: baseline; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.cambox .head code { font-family: var(--mono); font-size: 13px; }
+.cambox .head span { color: var(--muted); font-size: 13px; }
+.screen { position: relative; background: #111; min-height: 300px; display: grid; place-items: center; }
+.screen img { display: block; max-width: 100%; max-height: 70vh; }
+.screen .waiting {
+  position: absolute; inset: 0; display: grid; place-items: center; color: #c7d2d9; font-size: 14px; text-align: center; padding: 20px;
+}
+
+/* 카메라 탭 (3-3차) — 영상 · 지도 · 이번 순찰 */
+.camgrid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.cmap { height: 420px; background: #e9edf0; }
+.camgrid .screen { min-height: 420px; }
+.cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+.panel .grid { margin-top: 10px; }
+.cand { display: inline-block; padding: 1px 8px; border-radius: 999px; color: #fff; font-size: 11px; font-weight: 600; }
+img.thumb { height: 36px; border-radius: 4px; border: 1px solid var(--line); vertical-align: middle; }
+.mono { font-family: var(--mono); font-size: 12px; }
+@media (max-width: 1000px) { .camgrid, .cols2 { grid-template-columns: 1fr; } }

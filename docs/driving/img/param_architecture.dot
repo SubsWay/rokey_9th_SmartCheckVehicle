@@ -1,0 +1,81 @@
+// 주행 설정 아키텍처: 바꾼 값이 어느 노드 · 플러그인으로 들어가는지  —  dot -Tpng -Gdpi=100 param_architecture.dot -o param_architecture.png
+// 기준: scv_nav/config/nav2_rpp.yaml · localization.yaml · navigate_*_scv.xml (b52cc7a), mission_executor.py set_tolerance
+// 원본 = TurtleBot4 Jazzy 기본 설정(nav2.yaml · localization.yaml 원본 사본) 또는 Nav2 기본값
+digraph G {
+  graph [fontname="Noto Sans CJK KR", fontsize=30, labelloc=t, rankdir=LR, nodesep=0.25, ranksep=0.9, pad=0.3,
+         label="주행 설정 아키텍처 — 바꾼 값이 들어가는 노드 · 플러그인 ({ns} 안, 로봇 PC)\n"];
+  node  [fontname="Noto Sans CJK KR", fontsize=20, shape=plain];
+  edge  [fontname="Noto Sans CJK KR", fontsize=17, penwidth=1.8, arrowsize=1.0, color="#555555"];
+
+  // 설정 원본 (파일 · 코드)
+  node [shape=box, style="rounded,filled", fillcolor="#fff6cc", color="#b59a2a", penwidth=1.8, margin="0.2,0.1", fontsize=22];
+  F_NAV [label="nav2_rpp.yaml\n(nav2.launch.py params_file)"];
+  F_LOC [label="localization.yaml\n(localization.launch.py params)"];
+  F_BT [label="navigate_through_poses_scv.xml\nnavigate_to_pose_scv.xml\n(BT 파일)"];
+  F_ME [label="mission_executor.py\nset_tolerance() · 실행 중"];
+
+  node [shape=plain, style="", fontsize=18];
+  T [label=<
+<table border="0" cellborder="1" cellspacing="0" cellpadding="6" color="#888888">
+<tr><td bgcolor="#e8f1fb" colspan="4"><font point-size="24"><b>controller_server</b></font></td></tr>
+<tr><td bgcolor="#f4f4f4"><b>플러그인</b></td><td bgcolor="#f4f4f4"><b>파라미터</b></td><td bgcolor="#f4f4f4"><b>원본 → 지금</b></td><td bgcolor="#f4f4f4"><b>이유</b></td></tr>
+<tr><td rowspan="4">FollowPath<br/>RegulatedPurePursuit<br/>(MPPI → RPP)</td><td align="left">desired_linear_vel</td><td>0.5 → <b>0.2</b></td><td align="left">측정 속도 0.2 m/s</td></tr>
+<tr><td align="left">lookahead_dist</td><td>0.6 → <b>0.4</b></td><td align="left">코너 질러가기 (최대 이탈 19.7 → 16.6 cm)</td></tr>
+<tr><td align="left">rotate_to_heading_angular_vel</td><td>1.0 → <b>0.5</b></td><td align="left">도착 회전 오버슈트 (3.9° → 2.9°)</td></tr>
+<tr><td align="left">max_robot_pose_search_dist</td><td>10.0 → <b>1.0</b></td><td align="left">갔다 오는 경로에서 waypoint 건너뜀</td></tr>
+<tr><td rowspan="3">progress_checker<br/>(Simple →<br/>PoseProgressChecker)</td><td align="left">plugin</td><td>Simple → <b>Pose</b></td><td align="left">제자리 회전도 진척으로 인정</td></tr>
+<tr><td align="left">required_movement_radius</td><td>0.5 → <b>0.15</b></td><td align="left">저속 · 짧은 이동에서 Failed to make progress</td></tr>
+<tr><td align="left">required_movement_angle</td><td><b>0.5</b> (기본)</td><td align="left">약 29° 돌면 진척</td></tr>
+<tr><td rowspan="2" port="gc">general_goal_checker<br/>SimpleGoalChecker</td><td align="left">xy_goal_tolerance</td><td>0.25 → <b>0.05</b><br/><font color="#3b6ea8">정밀 때 0.03</font></td><td align="left">0.10 이면 매번 7–9 cm 앞에서 멈춤 (3-4)</td></tr>
+<tr><td align="left">yaw_goal_tolerance</td><td>0.25 → <b>0.087</b><br/><font color="#3b6ea8">정밀 때 0.052</font></td><td align="left">5°, 정밀 3°</td></tr>
+</table>>];
+
+  V [label=<
+<table border="0" cellborder="1" cellspacing="0" cellpadding="6" color="#888888">
+<tr><td bgcolor="#e8f1fb" colspan="3"><font point-size="24"><b>velocity_smoother</b></font></td></tr>
+<tr><td bgcolor="#f4f4f4"><b>파라미터</b></td><td bgcolor="#f4f4f4"><b>원본 → 지금</b></td><td bgcolor="#f4f4f4"><b>이유</b></td></tr>
+<tr><td align="left">max_velocity [x, y, θ]</td><td>0.26 → <b>0.2</b></td><td align="left">컨트롤러 속도와 맞춤</td></tr>
+<tr><td align="left">min_velocity [x, y, θ]</td><td>−0.2 → <b>0.0</b></td><td align="left">후진 금지 (Create 3 후방 센서 없음)</td></tr>
+</table>>];
+
+  B [label=<
+<table border="0" cellborder="1" cellspacing="0" cellpadding="6" color="#888888">
+<tr><td bgcolor="#e8f1fb" colspan="3"><font point-size="24"><b>bt_navigator</b></font></td></tr>
+<tr><td bgcolor="#f4f4f4"><b>항목</b></td><td bgcolor="#f4f4f4"><b>원본 → 지금</b></td><td bgcolor="#f4f4f4"><b>이유</b></td></tr>
+<tr><td align="left">default_nav_through_poses_bt_xml</td><td>기본 → <b>scv xml</b></td><td align="left">아래 두 BT 를 씀</td></tr>
+<tr><td align="left">default_nav_to_pose_bt_xml</td><td>기본 → <b>scv xml</b></td><td align="left"></td></tr>
+<tr><td align="left" port="bt">RemovePassedGoals radius</td><td>0.7 → <b>0.35</b></td><td align="left">코너를 0.7 m 앞에서 지워 질러감</td></tr>
+<tr><td align="left">복구 BackUp (두 BT)</td><td>있음 → <b>뺌</b></td><td align="left">후진 금지</td></tr>
+</table>>];
+
+  BS [label=<
+<table border="0" cellborder="1" cellspacing="0" cellpadding="6" color="#888888">
+<tr><td bgcolor="#e8f1fb" colspan="3"><font point-size="24"><b>behavior_server</b></font></td></tr>
+<tr><td align="left">behavior_plugins</td><td>backup 포함 → <b>spin · drive_on_heading · assisted_teleop · wait</b></td><td align="left">후진 금지</td></tr>
+</table>>];
+
+  LC [label=<
+<table border="0" cellborder="1" cellspacing="0" cellpadding="6" color="#888888">
+<tr><td bgcolor="#e8f1fb" colspan="4"><font point-size="24"><b>local_costmap · global_costmap</b></font></td></tr>
+<tr><td bgcolor="#f4f4f4"><b>플러그인</b></td><td bgcolor="#f4f4f4"><b>파라미터</b></td><td bgcolor="#f4f4f4"><b>원본 → 지금</b></td><td bgcolor="#f4f4f4"><b>이유</b></td></tr>
+<tr><td rowspan="3">keepout_layer<br/>StaticLayer (추가)</td><td align="left">enabled</td><td><b>true</b></td><td align="left">IF-10 음영 마스크 (점유 100 = 통과 금지)</td></tr>
+<tr><td align="left">map_topic</td><td><b>{ns}/keepout_mask</b></td><td align="left">상대 이름이면 costmap 아래로 붙음</td></tr>
+<tr><td align="left">map_subscribe_transient_local</td><td><b>true</b></td><td align="left">늦게 켜도 마지막 마스크 받음</td></tr>
+<tr><td>(costmap 공통)</td><td align="left">use_maximum</td><td>false → <b>true</b></td><td align="left">마스크 빈 칸이 지도 벽을 지우지 않게</td></tr>
+<tr><td>voxel_layer (local)</td><td align="left">origin_z</td><td>0.0 → <b>−0.1</b></td><td align="left">Sensor origin out of map bounds</td></tr>
+</table>>];
+
+  A [label=<
+<table border="0" cellborder="1" cellspacing="0" cellpadding="6" color="#888888">
+<tr><td bgcolor="#e8f1fb" colspan="3"><font point-size="24"><b>amcl</b></font></td></tr>
+<tr><td bgcolor="#f4f4f4"><b>파라미터</b></td><td bgcolor="#f4f4f4"><b>원본 → 지금</b></td><td bgcolor="#f4f4f4"><b>이유</b></td></tr>
+<tr><td align="left">update_min_d</td><td>0.25 → <b>0.10</b></td><td align="left">0.2 m/s 저속이라 갱신이 드묾</td></tr>
+<tr><td align="left">update_min_a</td><td>0.2 → <b>0.1</b></td><td align="left">같은 이유</td></tr>
+<tr><td align="left">max_beams</td><td>60 → <b>120</b></td><td align="left">벽 정합 단서 늘림 (재방문 오차 5.4 → 2.2 cm)</td></tr>
+</table>>];
+
+  F_NAV -> T; F_NAV -> V; F_NAV -> B; F_NAV -> BS; F_NAV -> LC;
+  F_LOC -> A;
+  F_BT -> B:bt [label=" BT 노드 파라미터"];
+  F_ME -> T:gc [color="#3b6ea8", style=dashed, label=" service set_parameters\n정밀 지점 전 0.03 / 0.052\n끝나면 0.05 / 0.087"];
+}

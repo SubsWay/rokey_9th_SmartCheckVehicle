@@ -1,0 +1,83 @@
+# =====================================================================
+# SCV 가상 세계 — testbed (3-3차)
+#   한 파일에 세 구역. 경로는 모두 이 파일이 있는 폴더 기준, 좌표는 모두 testbed 지도의 map 좌표(m)
+#     map       지도 파일 · 격자 크기                         → register_world.py · 가상 로봇 둘 다 읽음
+#     register  관제 PC(DB)에 등록할 값 — 관리자가 아는 정보   → register_world.py만 읽음 (server API로 등록)
+#     truth     실제 세계의 정답 — 로봇이 측정·판정으로 알아낼 값 → 가상 로봇만 읽음. DB에는 넣지 않음
+#   관제 PC는 truth를 모르고, 가상 로봇이 내보낸 측정값(RSSI) · 판정 · 사진으로만 알게 됩니다.
+#   SSID · 설비 ID는 register와 truth가 같아야 합니다(다르면 표본이 버려지거나 설비가 「정답 없음」으로 미확인).
+#
+#   사용
+#     python3 register_world.py                 # 기본 --world testbed/world.yaml, --robot-map-path = 이 PC의 testbed.yaml 절대 경로,
+#                                               측정 AP 활성을 120초까지 기다려 지정 (--no-target이면 등록만)
+#     python3 ../robot3_virtual.py              # 기본 --world virtual_world/testbed/world.yaml (--no-world면 로봇만)
+#     python3 make_assets.py testbed/world.yaml                        # media/ 사진 · 영상 다시 만들기 (선택)
+# =====================================================================
+
+map:
+  yaml: testbed.yaml                 # map_server 형식 yaml (image: testbed.pgm) — 12 × 8 m 방(칸막이 · 작은 방 · 기둥 · 선반)
+  name: scv_virtual_testbed          # server page 지도 이름
+  grid_size_m: 1.0                   # 격자 크기 — 1 m 격자가 벽과 맞음
+
+# ---------------------------------------------------------------------
+# register — 관제 PC에 등록 (register_world.py). 정보 탭에서 손으로 넣던 값
+# ---------------------------------------------------------------------
+register:
+  # 도크 접근 자세 — 도크 바로 앞에서 도크를 바라보는 자세 (client가 로봇 시작 위치 initialpose로 보냄)
+  dock_poses:
+    robot3: { x: 1.0, y: 0.6, yaw: 1.5708 }      # 섹터 1
+    robot4: { x: 7.0, y: 0.6, yaw: 1.5708 }      # 섹터 2
+  # 측정 대상 AP — x, y는 「설치했다고 등록한 위치」(실제 신호 원점은 truth.ap_models). target: 측정 AP(지도마다 하나)
+  aps:
+    - { ssid: SCV_VAP_A, note: "가상 AP A — 왼쪽 위", x: 2.0, y: 6.5, target: true }
+    - { ssid: SCV_VAP_B, note: "가상 AP B — 가운데 오른쪽", x: 9.0, y: 3.5 }
+  # 점검 설비 — type: extinguisher(소화기) · shutter(셔터) · exit_light(유도등) · rack(랙), x · y: 설비 위치, view: 관측 자세
+  facilities:
+    - { id: EXT-01, type: extinguisher, gauge: true,  x: 0.15,  y: 4.5,  view: { x: 0.9,  y: 4.5, yaw: 3.1416 } }
+    - { id: EXT-02, type: extinguisher, gauge: true,  x: 11.85, y: 1.0,  view: { x: 11.1, y: 1.0, yaw: 0.0 } }
+    - { id: EXT-03, type: extinguisher, gauge: false, x: 5.85,  y: 2.5,  view: { x: 5.1,  y: 2.5, yaw: 0.0 } }
+    - { id: SHT-01, type: shutter,      gauge: false, x: 6.05,  y: 6.5,  view: { x: 5.2,  y: 6.5, yaw: 0.0 } }
+    - { id: EXL-01, type: exit_light,   gauge: false, x: 10.0,  y: 7.85, view: { x: 10.0, y: 7.1, yaw: 1.5708 } }
+    - { id: EXL-02, type: exit_light,   gauge: false, x: 0.15,  y: 2.0,  view: { x: 0.9,  y: 2.0, yaw: 3.1416 } }
+
+# ---------------------------------------------------------------------
+# truth — 실제 세계 (가상 로봇만). 측정 · 판정의 정답
+# ---------------------------------------------------------------------
+truth:
+  # AP 신호 — 로봇 위치마다 지도(벽)에 따라 다른 값
+  #   rssi = p1m_dbm − 10·n·log10(원점까지 거리 m) − wall_loss_db × (원점 → 로봇 직선이 지나는 벽 수, 최대 max_walls)
+  #          − (음영 구역 안이면 loss_db) + 잡음(σ = noise_db),  floor_dbm ~ ceil_dbm 로 자름
+  #   벽 = 지도 pgm의 점유 칸(검은 부분) 덩어리 — 칸막이 · 작은 방 벽 · 기둥 · 선반 뒤가 약해짐
+  #   원점은 「실제로 AP가 있는 곳」 — register의 설치 위치와 일부러 다르게 두면 등록 위치가 틀린 경우도 시험할 수 있음
+  signal:
+    wall_loss_db: 4.0
+    max_walls: 3
+    floor_dbm: -100
+    ceil_dbm: -20
+  ap_models:
+    SCV_VAP_A: { x: 2.0, y: 6.5, p1m_dbm: -35, n: 2.2, noise_db: 2.0 }
+    SCV_VAP_B: { x: 9.0, y: 3.5, p1m_dbm: -35, n: 2.2, noise_db: 2.0 }
+
+  # 음영 구역 — 이 사각형 안에서는 모든 AP 신호가 loss_db만큼 더 약해짐 (네트워크 후보 → 정밀측정 → 확정이 나와야 하는 곳)
+  #   순찰은 측정 AP(register의 target) 하나만 잼 → 후보 = 그 AP의 칸 중앙값 < settings.rssi_suspect_dbm(−72)
+  #   어느 AP를 측정 AP로 골라도 음영 구역 밖은 −66 dBm 이상(여유 6 dB), 안은 −76 dBm 이하가 되도록 맞춘 값
+  holes:
+    - { name: "칸막이 왼쪽 아래(섹터 1)", x0: 4.0, y0: 0.0, x1: 6.0, y1: 2.0, loss_db: 35 }
+    - { name: "작은 방(오른쪽 위, 섹터 2)", x0: 8.0, y0: 5.0, x1: 12.0, y1: 8.0, loss_db: 35 }   # 격자(1 m)에 맞춤 — 문 칸까지
+
+  # 설비의 실제 상태 → 가상 판정(virtual/detect_result) + 판정 사진(카메라 토픽으로 잠시 내보냄 → client가 media로 저장)
+  #   truth: normal | abnormal | not_detected | occluded | position(실제 위치가 moved_to로 옮겨져 있음)
+  #   photo: 판정 때 카메라에 보일 사진 (make_assets.py가 만든 합성 사진 — 같은 이름의 실제 사진으로 바꿔 끼워도 됨)
+  facilities:
+    EXT-01: { truth: normal,       photo: media/facilities/EXT-01.jpg }
+    EXT-02: { truth: abnormal,     photo: media/facilities/EXT-02.jpg }
+    EXT-03: { truth: not_detected, photo: media/facilities/EXT-03.jpg }
+    SHT-01: { truth: occluded,     photo: media/facilities/SHT-01.jpg }
+    EXL-01: { truth: normal,       photo: media/facilities/EXL-01.jpg }
+    EXL-02: { truth: position, moved_to: { x: 0.15, y: 2.8 }, photo: media/facilities/EXL-02.jpg }
+
+  # 카메라 — 주행 중에는 영상을 차례로(멈추면 그 장면에서 멈춤), 판정 때는 그 설비 사진을 photo_hold_s초 동안
+  camera:
+    video: media/drive.mp4           # make_assets.py가 testbed 지도로 만든 1인칭 순찰 영상 (실제 영상으로 바꿔도 됨)
+    photo_hold_s: 6
+    view_range_m: 2.5                # 설비가 이 거리 안이어야 보임 (관측 자세에서 설비까지 0.75 ~ 0.85 m)

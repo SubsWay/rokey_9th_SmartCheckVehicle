@@ -1,0 +1,60 @@
+// mission_executor ① 시작 main()  —  dot -Tpng -Gdpi=110 me_flow_1_main.dot -o me_flow_1_main.png
+// 파랑 = mission_executor 처리, 노랑 육각형 = 판단, 주황 = 외부 노드, 주황 점선 = 주고받는 데이터
+digraph G {
+  graph [fontname="Noto Sans CJK KR", fontsize=30, labelloc=t, label="① 시작  main()  ·  L362–396\nnav = basic_navigator 노드 · me = mission_executor 노드\n", nodesep=0.3, ranksep=0.3, pad=0.2];
+  node  [fontname="Noto Sans CJK KR", fontsize=22, shape=box, style="rounded,filled", fillcolor="#e8f1fb", color="#3b6ea8", penwidth=1.6, margin="0.18,0.06"];
+  edge  [fontname="Noto Sans CJK KR", fontsize=20, color="#333333", penwidth=1.6, arrowsize=0.9];
+
+  start [label="시작", shape=oval, fillcolor="#d7ead6", color="#4a8a47"];
+  node [shape=hexagon, style=filled, fillcolor="#fff6cc", color="#b59a2a", margin="0.08,0.04"];
+  p1 [label="-p x y yaw 받음?"];
+  p2 [label="HOME 표에 ns 있음?"];
+  d1 [label="dock 상태?"];
+  lp [label="0.5초마다: 작업 없음 &\n배터리 ≤ 20 % & dock 아님?\n(아니오면 0.5초 뒤 다시)"];
+  node [shape=box, style="rounded,filled", fillcolor="#e8f1fb", color="#3b6ea8", margin="0.18,0.06"];
+  quit [label="종료 (-p x y yaw 를 주세요)", fillcolor="#f6d5d5", color="#b04040"];
+  home [label="home = 그 좌표 (undock 직후 자리)"];
+  und [label="undock"];
+  loc [label="localize(home)\ninitialpose 를 amcl_pose 올 때까지 반복"];
+  wait [label="Nav2 활성화 대기"];
+  set [label="settle: 제자리 +15° → −15° 회전"];
+  mk [label="MissionExecutor 생성\nIF-11 액션 서버 · IF-12 1 Hz 타이머\n(spin 스레드에서 ② 실행)"];
+  gd [label="go_dock(HOME)  → ④"];
+  end [label="Ctrl+C: 작업 중이면 cancelTask\ncmd_vel 0 보내고 종료", fillcolor="#eeeeee", color="#777777"];
+
+  node [shape=box, style="filled,bold", fillcolor="#fde7cf", color="#d9822b"];
+  C3a [label=<<b>create3_repub</b>  <font point-size="18">(RPi)</font><br/><font point-size="19" color="#8a4a0c"><b>nav ← 받음</b> topic dock_status<br align="left"/>    irobot_create_msgs/msg/DockStatus<br align="left"/>    is_docked: bool<br align="left"/></font>>];
+  C3b [label=<<b>create3_repub</b>  <font point-size="18">(RPi)</font><br/><font point-size="19" color="#8a4a0c"><b>nav → 보냄</b> action undock<br align="left"/>    irobot_create_msgs/action/Undock<br align="left"/>    Goal 없음 → Result is_docked: bool<br align="left"/></font>>];
+  AMCL [label=<<b>amcl</b>  <font point-size="18">(로봇 PC)</font><br/><font point-size="19" color="#8a4a0c"><b>nav → 보냄</b> topic initialpose<br align="left"/>    geometry_msgs/msg/PoseWithCovarianceStamped<br align="left"/>    pose (HOME) · covariance[0,7]=0.15², [35]=(10°)²<br align="left"/></font><font point-size="19" color="#8a4a0c"><b>nav ← 받음</b> topic amcl_pose<br align="left"/>    geometry_msgs/msg/PoseWithCovarianceStamped<br align="left"/>    받았는지만 봄<br align="left"/></font>>];
+  NAVa [label=<<b>bt_navigator</b>  <font point-size="18">(로봇 PC)</font><br/><font point-size="19" color="#8a4a0c"><b>nav → 보냄</b> service bt_navigator/get_state<br align="left"/>    lifecycle_msgs/srv/GetState<br align="left"/>    응답 current_state.label = active 까지<br align="left"/></font>>];
+  NAVb [label=<<b>behavior_server</b>  <font point-size="18">(로봇 PC)</font><br/><font point-size="19" color="#8a4a0c"><b>nav → 보냄</b> action spin<br align="left"/>    nav2_msgs/action/Spin<br align="left"/>    target_yaw: +0.26 → −0.26 rad<br align="left"/></font>>];
+  C3c [label=<<b>create3_repub</b>  <font point-size="18">(RPi)</font><br/><font point-size="19" color="#8a4a0c"><b>me ← 받음</b> topic battery_state<br align="left"/>    sensor_msgs/msg/BatteryState<br align="left"/>    percentage: float32 (0–1)<br align="left"/></font>>];
+  NAVc [label=<<b>bt_navigator · create3_repub</b>  <font point-size="18">(로봇 PC · RPi)</font><br/><font point-size="19" color="#8a4a0c"><b>nav → 보냄</b> action 진행 중 goal 취소<br align="left"/>    cancelTask()<br align="left"/></font><font point-size="19" color="#8a4a0c"><b>me → 보냄</b> topic cmd_vel<br align="left"/>    geometry_msgs/msg/TwistStamped<br align="left"/>    twist 전부 0 (정지)<br align="left"/></font>>];
+
+  start -> p1;
+  p1 -> home [label=" 예"];
+  p1 -> p2 [label=" 아니오"];
+  p2 -> home [label=" 예"];
+  p2 -> quit [label=" 아니오"];
+  home -> d1;
+  d1 -> und [label=" 예"];
+  d1 -> loc [label=" 아니오"];
+  und -> loc;
+  loc -> wait -> set -> mk -> lp;
+  lp -> gd [label=" 예"];
+  gd -> lp;
+  lp -> end [style=dotted, label=" Ctrl+C"];
+
+  // 외부 노드 상자 안에 주고받는 데이터를 씀. 항상 오른쪽에 두려고 처리 → 외부 방향으로 쓰고, 받는 것은 dir=back
+  edge [style=dashed, color="#d9822b", fontcolor="#a85a10", penwidth=2];
+  d1 -> C3a [dir=back];
+  und -> C3b ;
+  loc -> AMCL [dir=both];
+  wait -> NAVa [dir=back];
+  set -> NAVb ;
+  lp -> C3c [dir=back];
+  end -> NAVc ;
+
+  { rank=same; d1; C3a; } { rank=same; und; C3b; } { rank=same; loc; AMCL; }
+  { rank=same; wait; NAVa; } { rank=same; set; NAVb; } { rank=same; lp; C3c; } { rank=same; end; NAVc; }
+}

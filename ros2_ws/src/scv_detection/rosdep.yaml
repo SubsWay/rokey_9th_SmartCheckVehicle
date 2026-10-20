@@ -1,0 +1,4 @@
+python3-ultralytics:
+  ubuntu:
+    pip:
+      packages: [ultralytics]

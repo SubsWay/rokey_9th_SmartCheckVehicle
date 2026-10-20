@@ -1,0 +1,303 @@
+{
+  "topic": "/robot4/oakd/rgb/image_raw/compressed",
+  "frames_received": 12,
+  "frames": [
+    {
+      "width": 640,
+      "height": 480,
+      "old": [
+        {
+          "class": "Abnormal_left",
+          "confidence": 0.9451585412025452
+        },
+        {
+          "class": "Normal",
+          "confidence": 0.9420059323310852
+        }
+      ],
+      "new": [
+        {
+          "class": "Abnormal_right",
+          "confidence": 0.5926801562309265
+        },
+        {
+          "class": "Abnormal_right",
+          "confidence": 0.434976726770401
+        }
+      ]
+    },
+    {
+      "width": 640,
+      "height": 480,
+      "old": [
+        {
+          "class": "Normal",
+          "confidence": 0.9503389596939087
+        },
+        {
+          "class": "Abnormal_left",
+          "confidence": 0.9415128231048584
+        }
+      ],
+      "new": [
+        {
+          "class": "Abnormal_right",
+          "confidence": 0.6383885145187378
+        }
+      ]
+    },
+    {
+      "width": 640,
+      "height": 480,
+      "old": [
+        {
+          "class": "Normal",
+          "confidence": 0.9503525495529175
+        },
+        {
+          "class": "Abnormal_left",
+          "confidence": 0.9443536996841431
+        }
+      ],
+      "new": [
+        {
+          "class": "Abnormal_right",
+          "confidence": 0.6264105439186096
+        },
+        {
+          "class": "Abnormal_right",
+          "confidence": 0.30494123697280884
+        }
+      ]
+    },
+    {
+      "width": 640,
+      "height": 480,
+      "old": [
+        {
+          "class": "Abnormal_left",
+          "confidence": 0.945478618144989
+        },
+        {
+          "class": "Normal",
+          "confidence": 0.9314881563186646
+        }
+      ],
+      "new": [
+        {
+          "class": "Abnormal_right",
+          "confidence": 0.6856496334075928
+        },
+        {
+          "class": "Abnormal_right",
+          "confidence": 0.30098479986190796
+        }
+      ]
+    },
+    {
+      "width": 640,
+      "height": 480,
+      "old": [
+        {
+          "class": "Normal",
+          "confidence": 0.945418119430542
+        },
+        {
+          "class": "Abnormal_left",
+          "confidence": 0.9437293410301208
+        }
+      ],
+      "new": [
+        {
+          "class": "Abnormal_right",
+          "confidence": 0.6297917366027832
+        },
+        {
+          "class": "Abnormal_right",
+          "confidence": 0.3572152256965637
+        }
+      ]
+    },
+    {
+      "width": 640,
+      "height": 480,
+      "old": [
+        {
+          "class": "Abnormal_left",
+          "confidence": 0.9599170088768005
+        },
+        {
+          "class": "Normal",
+          "confidence": 0.9409995079040527
+        }
+      ],
+      "new": [
+        {
+          "class": "Abnormal_right",
+          "confidence": 0.6801935434341431
+        }
+      ]
+    },
+    {
+      "width": 640,
+      "height": 480,
+      "old": [
+        {
+          "class": "Abnormal_left",
+          "confidence": 0.9559184908866882
+        },
+        {
+          "class": "Normal",
+          "confidence": 0.9303749799728394
+        }
+      ],
+      "new": [
+        {
+          "class": "Abnormal_right",
+          "confidence": 0.6288880705833435
+        },
+        {
+          "class": "Abnormal_right",
+          "confidence": 0.3113250136375427
+        }
+      ]
+    },
+    {
+      "width": 640,
+      "height": 480,
+      "old": [
+        {
+          "class": "Abnormal_left",
+          "confidence": 0.9499162435531616
+        },
+        {
+          "class": "Normal",
+          "confidence": 0.9255871176719666
+        }
+      ],
+      "new": [
+        {
+          "class": "Abnormal_right",
+          "confidence": 0.6428753137588501
+        },
+        {
+          "class": "Abnormal_right",
+          "confidence": 0.31670060753822327
+        }
+      ]
+    },
+    {
+      "width": 640,
+      "height": 480,
+      "old": [
+        {
+          "class": "Normal",
+          "confidence": 0.9420322775840759
+        },
+        {
+          "class": "Abnormal_left",
+          "confidence": 0.9369668364524841
+        }
+      ],
+      "new": [
+        {
+          "class": "Abnormal_right",
+          "confidence": 0.6768323183059692
+        }
+      ]
+    },
+    {
+      "width": 640,
+      "height": 480,
+      "old": [
+        {
+          "class": "Abnormal_left",
+          "confidence": 0.9516234397888184
+        },
+        {
+          "class": "Normal",
+          "confidence": 0.9253550171852112
+        }
+      ],
+      "new": [
+        {
+          "class": "Abnormal_right",
+          "confidence": 0.6697657108306885
+        }
+      ]
+    },
+    {
+      "width": 640,
+      "height": 480,
+      "old": [
+        {
+          "class": "Abnormal_left",
+          "confidence": 0.9579810500144958
+        },
+        {
+          "class": "Normal",
+          "confidence": 0.8638839721679688
+        }
+      ],
+      "new": [
+        {
+          "class": "Abnormal_right",
+          "confidence": 0.6799941658973694
+        },
+        {
+          "class": "Abnormal_right",
+          "confidence": 0.3675399422645569
+        }
+      ]
+    },
+    {
+      "width": 640,
+      "height": 480,
+      "old": [
+        {
+          "class": "Abnormal_left",
+          "confidence": 0.9647803902626038
+        },
+        {
+          "class": "Normal",
+          "confidence": 0.8951610326766968
+        }
+      ],
+      "new": [
+        {
+          "class": "Abnormal_right",
+          "confidence": 0.700564980506897
+        }
+      ]
+    }
+  ],
+  "sha256": {
+    "old": "0f7bcaa5f1cd098bf81c9b71b8446af037dc5d26747f5401eff772ea63795edb",
+    "new": "e2470df3e885b6181222c88b4552f44427c152981c3aee56eb9787fd0b277274"
+  },
+  "accuracy": "Not measured: live scene ground truth is not annotated",
+  "confidence_summary": {
+    "old": {
+      "Abnormal_left": {
+        "detections": 12,
+        "min": 0.9369668364524841,
+        "max": 0.9647803902626038,
+        "mean": 0.9497780402501425
+      },
+      "Normal": {
+        "detections": 12,
+        "min": 0.8638839721679688,
+        "max": 0.9503525495529175,
+        "mean": 0.9285831352074941
+      }
+    },
+    "new": {
+      "Abnormal_right": {
+        "detections": 19,
+        "min": 0.30098479986190796,
+        "max": 0.700564980506897,
+        "mean": 0.5392483284598902
+      }
+    }
+  }
+}

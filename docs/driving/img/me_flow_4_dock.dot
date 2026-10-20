@@ -1,0 +1,44 @@
+// mission_executor ④ 복귀 go_dock · go_home  —  dot -Tpng -Gdpi=110 me_flow_4_dock.dot -o me_flow_4_dock.png
+// 파랑 = mission_executor 처리, 노랑 육각형 = 판단, 주황 = 외부 노드(상자 안에 주고받는 데이터), 주황 점선 = 데이터 흐름
+digraph G {
+  graph [fontname="Noto Sans CJK KR", fontsize=30, labelloc=t, label="④ 복귀  go_dock · go_home  ·  L280–305\nnav = basic_navigator 노드 · me = mission_executor 노드\n", nodesep=0.3, ranksep=0.3, pad=0.2];
+  node  [fontname="Noto Sans CJK KR", fontsize=22, shape=box, style="rounded,filled", fillcolor="#e8f1fb", color="#3b6ea8", penwidth=1.6, margin="0.18,0.06"];
+  edge  [fontname="Noto Sans CJK KR", fontsize=20, color="#333333", penwidth=1.6, arrowsize=0.9];
+
+  in [label="go_dock(waypoints)\n(DOCK 작업 · 배터리 부족)", shape=oval, fillcolor="#d7ead6", color="#4a8a47"];
+  node [shape=hexagon, style=filled, fillcolor="#fff6cc", color="#b59a2a", margin="0.08,0.04"];
+  q1 [label="이미 dock 상태?"];
+  q2 [label="waypoints 있음?"];
+  q3 [label="도착 ok?"];
+  q4 [label="dock 됐음?"];
+  node [shape=box, style="rounded,filled", fillcolor="#e8f1fb", color="#3b6ea8", margin="0.18,0.06"];
+  d0 [label="state = DOCKED · 성공", fillcolor="#d7ead6", color="#4a8a47"];
+  fw [label="follow(waypoints)  → ③"];
+  gh [label="go_home: HOME 에서 dock 반대쪽으로\n0.3 m (DOCK_BACKOFF) 나간 자리로 이동\n(DOCK 작업 취소면 바로 멈춤)"];
+  f1 [label="실패 (그 사유 그대로)", fillcolor="#f6d5d5", color="#b04040"];
+  dk [label="state = DOCKING · dock"];
+  d1 [label="state = DOCKED · 성공", fillcolor="#d7ead6", color="#4a8a47"];
+  f2 [label="state = IDLE · 실패 DOCK_FAILED", fillcolor="#f6d5d5", color="#b04040"];
+
+  in -> q1;
+  q1 -> d0 [label=" 예"];
+  q1 -> q2 [label=" 아니오"];
+  q2 -> fw [label=" 예"];
+  q2 -> gh [label=" 아니오"];
+  fw -> q3; gh -> q3;
+  q3 -> f1 [label=" 아니오"];
+  q3 -> dk [label=" 예"];
+  dk -> q4;
+  q4 -> d1 [label=" 예"];
+  q4 -> f2 [label=" 아니오"];
+
+  node [shape=box, style="filled,bold", fillcolor="#fde7cf", color="#d9822b"];
+  C3a [label=<<b>create3_repub</b>  <font point-size="18">(RPi)</font><br/><font point-size="19" color="#8a4a0c"><b>nav ← 받음</b> topic dock_status<br align="left"/>    irobot_create_msgs/msg/DockStatus<br align="left"/>    is_docked: bool<br align="left"/></font>>];
+  NV [label=<<b>bt_navigator</b>  <font point-size="18">(로봇 PC)</font><br/><font point-size="19" color="#8a4a0c"><b>nav → 보냄</b> action navigate_to_pose<br align="left"/>    nav2_msgs/action/NavigateToPose<br align="left"/>    Goal pose: HOME + 0.3 m<br align="left"/></font><font point-size="19" color="#8a4a0c"><b>nav ← 받음</b> result <br align="left"/>    status → SUCCEEDED · …<br align="left"/></font>>];
+  C3b [label=<<b>create3_repub</b>  <font point-size="18">(RPi)</font><br/><font point-size="19" color="#8a4a0c"><b>nav → 보냄</b> action dock<br align="left"/>    irobot_create_msgs/action/Dock<br align="left"/>    Goal 없음, 끝날 때까지 기다림<br align="left"/></font>>];
+  C3c [label=<<b>create3_repub</b>  <font point-size="18">(RPi)</font><br/><font point-size="19" color="#8a4a0c"><b>nav ← 받음</b> topic dock_status<br align="left"/>    irobot_create_msgs/msg/DockStatus<br align="left"/>    is_docked: bool<br align="left"/></font>>];
+  ST [label=<<b>inspection_manager · ros_bridge</b>  <font point-size="18">(관제 PC)</font><br/><font point-size="19" color="#8a4a0c"><b>me → 보냄</b> topic 1 Hz status<br align="left"/>    scv_msgs/msg/RobotStatus<br align="left"/>    state = DOCKING · DOCKED · IDLE<br align="left"/></font>>];
+  edge [style=dashed, color="#d9822b", penwidth=2];
+  q1 -> C3a [dir=back]; gh -> NV [dir=both]; dk -> C3b; q4 -> C3c [dir=back]; f2 -> ST;
+  { rank=same; q1; C3a; } { rank=same; gh; NV; } { rank=same; dk; C3b; } { rank=same; q4; C3c; } { rank=same; f2; ST; }
+}
